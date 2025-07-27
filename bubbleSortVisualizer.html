@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bubble Sort Visualizer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light blue-gray background */
+            color: #334155; /* Darker text */
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            max-width: 90%;
+            width: 1000px; /* Increased max-width for better visualization */
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #1e293b; /* Even darker title */
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            background-color: #e2e8f0; /* Lighter gray for controls */
+            border-radius: 8px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+        }
+
+        .controls label {
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .controls input[type="number"],
+        .controls input[type="range"] {
+            padding: 8px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 1rem;
+            color: #334155;
+            background-color: #f8fafc;
+            transition: border-color 0.2s;
+        }
+
+        .controls input[type="number"]:focus,
+        .controls input[type="range"]:focus {
+            outline: none;
+            border-color: #6366f1; /* Indigo focus color */
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        .controls button {
+            background-color: #4f46e5; /* Indigo button */
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+        }
+
+        .controls button:hover {
+            background-color: #4338ca; /* Darker indigo on hover */
+            transform: translateY(-2px);
+        }
+
+        .controls button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(79, 70, 229, 0.3);
+        }
+
+        .visualization-area {
+            display: flex;
+            align-items: flex-end; /* Bars start from the bottom */
+            height: 300px; /* Fixed height for visualization */
+            width: 100%;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            background-color: #f8fafc;
+            padding: 10px;
+            box-sizing: border-box;
+            overflow-x: auto; /* Allow horizontal scrolling if many bars */
+            gap: 2px; /* Small gap between bars */
+        }
+
+        .bar {
+            width: 100%; /* Will be overridden by flex-basis */
+            background-color: #3b82f6; /* Blue bar color */
+            margin: 0 1px; /* Small space between bars */
+            transition: height 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            font-size: 0.75rem; /* Smaller text for bar values */
+            color: white;
+            font-weight: 500;
+            padding-bottom: 5px;
+            box-sizing: border-box;
+            border-radius: 2px 2px 0 0; /* Rounded top corners */
+        }
+
+        .bar.comparing {
+            background-color: #f59e0b; /* Amber for comparing */
+        }
+
+        .bar.swapping {
+            background-color: #ef4444; /* Red for swapping */
+        }
+
+        .bar.sorted {
+            background-color: #10b981; /* Green for sorted */
+        }
+
+        .algorithm-info {
+            background-color: #ecfdf5; /* Light green for info */
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #d1fae5;
+        }
+
+        .algorithm-info h2 {
+            color: #065f46; /* Dark green title */
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .algorithm-info p {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #047857;
+        }
+
+        .algorithm-info pre {
+            background-color: #d1fae5;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+            color: #064e3b;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                gap: 20px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .controls input[type="range"] {
+                width: 100%;
+            }
+
+            .visualization-area {
+                height: 250px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                padding: 15px;
+            }
+            h1 {
+                font-size: 1.75rem;
+            }
+            .controls button {
+                width: 100%;
+            }
+            .bar {
+                font-size: 0.6rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bubble Sort Visualizer</h1>
+
+        <div class="controls">
+            <label for="arraySize">Array Size:</label>
+            <input type="number" id="arraySize" value="50" min="5" max="200">
+
+            <label for="speed">Speed (ms):</label>
+            <input type="range" id="speed" value="50" min="10" max="500" step="10">
+
+            <button id="generateArray">Generate New Array</button>
+            <button id="sortArray">Sort Array</button>
+            <button id="resetVisualizer">Reset</button>
+        </div>
+
+        <div id="visualizationArea" class="visualization-area">
+            <!-- Bars will be rendered here by JavaScript -->
+        </div>
+
+        <div class="algorithm-info">
+            <h2>Bubble Sort Algorithm</h2>
+            <p>
+                Bubble Sort is a simple sorting algorithm that repeatedly steps through the list, compares adjacent elements and swaps them if they are in the wrong order. The pass through the list is repeated until no swaps are needed, which indicates that the list is sorted.
+            </p>
+            <p>
+                <strong>Time Complexity:</strong>
+                <ul>
+                    <li>Worst-case: $O(n^2)$</li>
+                    <li>Average-case: $O(n^2)$</li>
+                    <li>Best-case: $O(n)$ (when the array is already sorted)</li>
+                </ul>
+            </p>
+            <p>
+                <strong>Space Complexity:</strong> $O(1)$
+            </p>
+            <h3>Pseudocode:</h3>
+            <pre>
+function bubbleSort(array):
+    n = length(array)
+    for i from 0 to n-1:
+        swapped = false
+        for j from 0 to n-i-1:
+            if array[j] > array[j+1]:
+                swap(array[j], array[j+1])
+                swapped = true
+        if not swapped:
+            break // If no two elements were swapped by inner loop, then break
+            </pre>
+        </div>
+    </div>
+
+    <script>
+        // Get DOM elements
+        const visualizationArea = document.getElementById('visualizationArea');
+        const arraySizeInput = document.getElementById('arraySize');
+        const speedInput = document.getElementById('speed');
+        const generateButton = document.getElementById('generateArray');
+        const sortButton = document.getElementById('sortArray');
+        const resetButton = document.getElementById('resetVisualizer');
+
+        let array = []; // The array to be sorted
+        let arraySize = parseInt(arraySizeInput.value); // Current array size
+        let animationSpeed = parseInt(speedInput.value); // Current animation speed
+        let isSorting = false; // Flag to prevent multiple sorts at once
+        let timeoutIds = []; // To store timeout IDs for clearing animations
+
+        /**
+         * Generates a new array with random values and renders it.
+         */
+        function generateNewArray() {
+            // Clear any ongoing sorting animations
+            clearTimeouts();
+            isSorting = false;
+            sortButton.disabled = false; // Enable sort button
+
+            arraySize = parseInt(arraySizeInput.value);
+            array = [];
+            visualizationArea.innerHTML = ''; // Clear previous bars
+
+            // Generate random numbers between 10 and 300
+            for (let i = 0; i < arraySize; i++) {
+                array.push(Math.floor(Math.random() * 290) + 10);
+            }
+            renderArray();
+        }
+
+        /**
+         * Renders the current array as a series of bars in the visualization area.
+         */
+        function renderArray() {
+            visualizationArea.innerHTML = ''; // Clear existing bars
+            const barWidth = 100 / arraySize; // Calculate dynamic width for bars
+
+            array.forEach(value => {
+                const bar = document.createElement('div');
+                bar.classList.add('bar');
+                bar.style.height = `${value}px`;
+                bar.style.flexBasis = `${barWidth}%`; // Use flex-basis for width
+                bar.textContent = value; // Display value on the bar
+                visualizationArea.appendChild(bar);
+            });
+        }
+
+        /**
+         * Swaps two elements in the array and updates their visual representation.
+         * @param {HTMLElement} bar1 - The first bar element.
+         * @param {HTMLElement} bar2 - The second bar element.
+         */
+        function swapBars(bar1, bar2) {
+            return new Promise(resolve => {
+                // Add swapping class for visual effect
+                bar1.classList.add('swapping');
+                bar2.classList.add('swapping');
+
+                // Temporarily disable transitions for immediate position swap
+                bar1.style.transition = 'none';
+                bar2.style.transition = 'none';
+
+                // Get current positions
+                const bar1Rect = bar1.getBoundingClientRect();
+                const bar2Rect = bar2.getBoundingClientRect();
+
+                // Calculate the difference in X position
+                const dx = bar2Rect.left - bar1Rect.left;
+
+                // Apply transform for visual swap
+                bar1.style.transform = `translateX(${dx}px)`;
+                bar2.style.transform = `translateX(${-dx}px)`;
+
+                // Re-enable transitions after a very short delay to allow transform to apply
+                timeoutIds.push(setTimeout(() => {
+                    bar1.style.transition = ''; // Reset transition
+                    bar2.style.transition = ''; // Reset transition
+
+                    // Swap the actual DOM elements
+                    const parent = bar1.parentNode;
+                    if (bar1.nextSibling === bar2) {
+                        parent.insertBefore(bar2, bar1);
+                    } else {
+                        parent.insertBefore(bar1, bar2);
+                    }
+
+                    // Reset transforms after DOM swap
+                    bar1.style.transform = '';
+                    bar2.style.transform = '';
+
+                    // Remove swapping class after the swap
+                    bar1.classList.remove('swapping');
+                    bar2.classList.remove('swapping');
+                    resolve();
+                }, animationSpeed / 2)); // Half the animation speed for the swap visual
+            });
+        }
+
+        /**
+         * Implements the Bubble Sort algorithm with visualization.
+         */
+        async function bubbleSort() {
+            if (isSorting) return; // Prevent multiple sorts
+            isSorting = true;
+            sortButton.disabled = true; // Disable sort button during sorting
+            generateButton.disabled = true; // Disable generate button
+            arraySizeInput.disabled = true; // Disable array size input
+
+            const bars = visualizationArea.children;
+            const n = array.length;
+
+            for (let i = 0; i < n - 1; i++) {
+                let swapped = false;
+                for (let j = 0; j < n - i - 1; j++) {
+                    const bar1 = bars[j];
+                    const bar2 = bars[j + 1];
+
+                    // Highlight bars being compared
+                    bar1.classList.add('comparing');
+                    bar2.classList.add('comparing');
+
+                    await new Promise(resolve => timeoutIds.push(setTimeout(resolve, animationSpeed)));
+
+                    // Get numeric values from the bar's text content
+                    const val1 = parseInt(bar1.textContent);
+                    const val2 = parseInt(bar2.textContent);
+
+                    if (val1 > val2) {
+                        // Swap values in the array (for internal logic)
+                        [array[j], array[j + 1]] = [array[j + 1], array[j]];
+
+                        // Visually swap the bars
+                        await swapBars(bar1, bar2);
+                        swapped = true;
+                    }
+
+                    // Remove comparing class
+                    bar1.classList.remove('comparing');
+                    bar2.classList.remove('comparing');
+                }
+
+                // Mark the largest element as sorted after each pass
+                bars[n - 1 - i].classList.add('sorted');
+
+                if (!swapped) {
+                    // If no two elements were swapped by inner loop, then break
+                    break;
+                }
+            }
+            // Mark remaining unsorted elements as sorted
+            for (let k = 0; k < n; k++) {
+                if (!bars[k].classList.contains('sorted')) {
+                    bars[k].classList.add('sorted');
+                }
+            }
+
+            isSorting = false;
+            generateButton.disabled = false; // Re-enable generate button
+            arraySizeInput.disabled = false; // Re-enable array size input
+        }
+
+        /**
+         * Clears all pending setTimeout calls.
+         */
+        function clearTimeouts() {
+            timeoutIds.forEach(id => clearTimeout(id));
+            timeoutIds = [];
+        }
+
+        /**
+         * Resets the visualizer to its initial state.
+         */
+        function resetVisualizer() {
+            clearTimeouts();
+            isSorting = false;
+            sortButton.disabled = false;
+            generateButton.disabled = false;
+            arraySizeInput.disabled = false;
+            generateNewArray(); // Generate a new array and render it
+        }
+
+        // Event Listeners
+        generateButton.addEventListener('click', generateNewArray);
+        sortButton.addEventListener('click', bubbleSort);
+        resetButton.addEventListener('click', resetVisualizer);
+
+        // Update animation speed when slider changes
+        speedInput.addEventListener('input', (event) => {
+            animationSpeed = parseInt(event.target.value);
+        });
+
+        // Initialize the visualizer on page load
+        window.onload = generateNewArray;
+    </script>
+</body>
+</html>
